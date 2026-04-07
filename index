@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stockologi — Retail Investor Research & Distribution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a08;
+    --off-black: #111110;
+    --surface: #161614;
+    --border: rgba(255,255,255,0.07);
+    --border-bright: rgba(255,255,255,0.14);
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --green: #4a9e6e;
+    --green-dim: rgba(74,158,110,0.12);
+    --text: #e8e6df;
+    --text-muted: #7a7870;
+    --text-mid: #b0ada4;
+    --mono: 'DM Mono', monospace;
+    --serif: 'DM Serif Display', serif;
+    --sans: 'Instrument Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* GRID LINES */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,8,0.85);
+    backdrop-filter: blur(12px);
+  }
+
+  .nav-logo {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .nav-logo span { color: var(--gold); }
+
+  .nav-tag {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 2rem 5rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .hero-kicker {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .hero-kicker::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.6rem, 6vw, 4.5rem);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1.75rem;
+    max-width: 820px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+
+  .hero-sub {
+    font-size: 1.05rem;
+    color: var(--text-mid);
+    max-width: 520px;
+    line-height: 1.75;
+    margin-bottom: 3rem;
+  }
+
+  /* STAT STRIP */
+  .stat-strip {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    max-width: 680px;
+    margin-bottom: 3.5rem;
+    background: var(--surface);
+  }
+
+  .stat {
+    flex: 1;
+    padding: 1.1rem 1.5rem;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+
+  .stat:last-child { border-right: none; }
+
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--gold);
+    display: block;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* EMAIL CAPTURE */
+  .capture-wrap {
+    max-width: 480px;
+  }
+
+  .capture-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .capture-form {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .capture-form:focus-within {
+    border-color: var(--gold);
+  }
+
+  .capture-form input {
+    flex: 1;
+    background: var(--surface);
+    border: none;
+    outline: none;
+    padding: 0.85rem 1.1rem;
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    color: var(--text);
+    min-width: 0;
+  }
+
+  .capture-form input::placeholder { color: var(--text-muted); }
+
+  .capture-form button {
+    background: var(--gold);
+    border: none;
+    padding: 0.85rem 1.4rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--black);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .capture-form button:hover { background: var(--gold-light); }
+  .capture-form button:active { transform: scale(0.98); }
+
+  .capture-note {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 0.6rem;
+  }
+
+  /* SUCCESS STATE */
+  .capture-success {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    border: 1px solid var(--green);
+    border-radius: 4px;
+    background: var(--green-dim);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--green);
+    letter-spacing: 0.05em;
+  }
+
+  /* DIVIDER */
+  .section-divider {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* SECTION */
+  section {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+  }
+
+  .section-kicker {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  section h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+    max-width: 600px;
+  }
+
+  section h2 em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+
+  section p {
+    color: var(--text-mid);
+    max-width: 540px;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+  }
+
+  /* FUNNEL */
+  .funnel {
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 560px;
+  }
+
+  .funnel-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    background: var(--surface);
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .funnel-row:first-child { border-radius: 4px 4px 0 0; }
+  .funnel-row:last-child { border-bottom: 1px solid var(--border); border-radius: 0 0 4px 4px; }
+
+  .funnel-row:hover { background: rgba(201,168,76,0.04); }
+
+  .funnel-num {
+    font-family: var(--mono);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--gold);
+    min-width: 120px;
+  }
+
+  .funnel-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .funnel-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--gold-dim);
+    border-radius: 4px 0 0 4px;
+    transition: width 1s ease;
+  }
+
+  /* WHAT WE DO GRID */
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 3rem;
+    background: var(--border);
+  }
+
+  .pillar {
+    background: var(--surface);
+    padding: 1.75rem;
+    transition: background 0.2s;
+  }
+
+  .pillar:hover { background: rgba(201,168,76,0.03); }
+
+  .pillar-icon {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .pillar-icon::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+
+  .pillar h3 {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    margin-bottom: 0.6rem;
+    color: var(--text);
+  }
+
+  .pillar p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  /* PROOF */
+  .proof-block {
+    border-left: 2px solid var(--gold);
+    padding: 1.5rem 2rem;
+    background: var(--gold-dim);
+    border-radius: 0 4px 4px 0;
+    margin-top: 3rem;
+  }
+
+  .proof-stat {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+  }
+
+  .proof-block p {
+    font-size: 1rem;
+    color: var(--text);
+    max-width: 100%;
+    margin: 0;
+    line-height: 1.7;
+  }
+
+  /* BOTTOM CTA */
+  .bottom-cta {
+    text-align: center;
+    padding: 6rem 2rem;
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+  }
+
+  .bottom-cta h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    letter-spacing: -0.02em;
+    margin: 0 auto 1rem;
+    max-width: 580px;
+  }
+
+  .bottom-cta h2 em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+
+  .bottom-cta p {
+    color: var(--text-muted);
+    margin: 0 auto 2.5rem;
+    max-width: 420px;
+    font-size: 0.95rem;
+  }
+
+  .bottom-capture {
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  footer span {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 0.85em;
+    background: var(--gold);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+
+  .hero > * {
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-kicker { animation-delay: 0.1s; }
+  .hero h1 { animation-delay: 0.2s; }
+  .hero-sub { animation-delay: 0.3s; }
+  .stat-strip { animation-delay: 0.4s; }
+  .capture-wrap { animation-delay: 0.5s; }
+
+  /* TICKER TAPE */
+  .ticker-wrap {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    padding: 0.6rem 0;
+    background: var(--off-black);
+  }
+
+  .ticker-track {
+    display: flex;
+    gap: 0;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  .ticker-item {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .ticker-item .dot {
+    width: 4px;
+    height: 4px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .ticker-item.up { color: var(--green); }
+  .ticker-item.gold { color: var(--gold); }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .stat-strip { flex-direction: column; }
+    .stat { border-right: none; border-bottom: 1px solid var(--border); }
+    .stat:last-child { border-bottom: none; }
+    nav { padding: 1rem; }
+    .nav-tag { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Stock<span>ologi</span></div>
+  <div class="nav-tag">Retail Intelligence</div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-wrap" style="margin-top: 60px;">
+  <div class="ticker-track" id="ticker">
+    <span class="ticker-item gold"><span class="dot"></span> EWS Signal Active</span>
+    <span class="ticker-item"><span class="dot"></span> 4M+ Quarterly Views</span>
+    <span class="ticker-item up"><span class="dot"></span> 15,000+ Verified Investors</span>
+    <span class="ticker-item"><span class="dot"></span> CDF Brief — Catalyst Detection Framework</span>
+    <span class="ticker-item gold"><span class="dot"></span> Avg Buy Size $7,500+</span>
+    <span class="ticker-item"><span class="dot"></span> 1,500–2,000 Buyers Per Issuer</span>
+    <span class="ticker-item up"><span class="dot"></span> Multi-Platform Distribution</span>
+    <span class="ticker-item"><span class="dot"></span> Sector Exclusivity Per Cycle</span>
+    <!-- duplicate for seamless loop -->
+    <span class="ticker-item gold"><span class="dot"></span> EWS Signal Active</span>
+    <span class="ticker-item"><span class="dot"></span> 4M+ Quarterly Views</span>
+    <span class="ticker-item up"><span class="dot"></span> 15,000+ Verified Investors</span>
+    <span class="ticker-item"><span class="dot"></span> CDF Brief — Catalyst Detection Framework</span>
+    <span class="ticker-item gold"><span class="dot"></span> Avg Buy Size $7,500+</span>
+    <span class="ticker-item"><span class="dot"></span> 1,500–2,000 Buyers Per Issuer</span>
+    <span class="ticker-item up"><span class="dot"></span> Multi-Platform Distribution</span>
+    <span class="ticker-item"><span class="dot"></span> Sector Exclusivity Per Cycle</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-kicker">Q2 2026 Coverage — Now Open</div>
+  <h1>We put your stock in front of <em>verified buyers</em> before the move.</h1>
+  <p class="hero-sub">Stockologi distributes institutional-quality retail research to 15,000+ active investors across TikTok, Reddit, email, and proprietary channels. We cover earnings catalysts, corporate actions, and technical setups — not press releases.</p>
+
+  <div class="stat-strip">
+    <div class="stat">
+      <span class="stat-val">4M+</span>
+      <span class="stat-label">Quarterly Views</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">15K+</span>
+      <span class="stat-label">Verified Investors</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">>$7,500</span>
+      <span class="stat-label">Avg Buy Size</span>
+    </div>
+    <div class="stat">
+      <span class="stat-val">1,500–2K</span>
+      <span class="stat-label">Buyers Per Issuer</span>
+    </div>
+  </div>
+
+  <div class="capture-wrap">
+    <div class="capture-label">Request Coverage Information</div>
+    <div class="capture-form" id="heroForm" style="display:flex;gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden;">
+      <input type="email" id="heroEmail" placeholder="your@company.com" autocomplete="email" />
+      <button onclick="handleSubmit('heroEmail','heroForm','heroSuccess')">Request Info</button>
+    </div>
+    <div class="capture-success" id="heroSuccess">
+      <span>✓</span> We'll be in touch within 24 hours.
+    </div>
+    <p class="capture-note">One company per sector per cycle. Slots are limited.</p>
+  </div>
+</div>
+
+<!-- PROOF STRIP -->
+<div class="section-divider"></div>
+<section>
+  <div class="section-kicker">Distribution in practice</div>
+  <h2>What <em>real</em> retail distribution looks like.</h2>
+  <p>Two days ago, one 3-paragraph brief posted to our Reddit community. No ad spend. No boost. Pure organic reach to active investors already watching the market.</p>
+
+  <div class="proof-block">
+    <div class="proof-stat">// Live result — Reddit, March 2026</div>
+    <p>118,000 views &nbsp;·&nbsp; 60 upvotes &nbsp;·&nbsp; 150 shares &nbsp;·&nbsp; 3 paragraphs &nbsp;·&nbsp; $0 ad spend.</p>
+  </div>
+
+  <p style="margin-top: 1.5rem;">Most IR programs charge $10,000–$20,000/month to approximate that. We build it into every coverage cycle.</p>
+</section>
+
+<!-- FUNNEL -->
+<div class="section-divider"></div>
+<section>
+  <div class="section-kicker">The conversion funnel</div>
+  <h2>From impression to <em>activated capital.</em></h2>
+  <p>We measure to buyers, not impressions. Every stage of our funnel is tracked, verified, and tied to confirmed investor behaviour — not passive readership.</p>
+
+  <div class="funnel" id="funnelWrap">
+    <div class="funnel-row">
+      <div class="funnel-bar" style="width: 100%"></div>
+      <div class="funnel-num" style="position:relative">4,000,000</div>
+      <div class="funnel-desc" style="position:relative">Quarterly reach — TikTok, YouTube, Instagram, Reddit</div>
+    </div>
+    <div class="funnel-row">
+      <div class="funnel-bar" style="width: 10%"></div>
+      <div class="funnel-num" style="position:relative">320–480K</div>
+      <div class="funnel-desc" style="position:relative">Engaged readers (8–12% engagement rate)</div>
+    </div>
+    <div class="funnel-row">
+      <div class="funnel-bar" style="width: 3%"></div>
+      <div class="funnel-num" style="position:relative">12–28K</div>
+      <div class="funnel-desc" style="position:relative">Report downloads & clickthroughs</div>
+    </div>
+    <div class="funnel-row">
+      <div class="funnel-bar" style="width: 1.5%"></div>
+      <div class="funnel-num" style="position:relative">4,000–8,000</div>
+      <div class="funnel-desc" style="position:relative">Verified investor inquiries — active buyer behaviour confirmed</div>
+    </div>
+    <div class="funnel-row">
+      <div class="funnel-bar" style="width: 0.5%"></div>
+      <div class="funnel-num" style="position:relative; color: var(--gold-light)">1,500–2,000</div>
+      <div class="funnel-desc" style="position:relative; color: var(--text)">Target buyers per issuer — qualified &amp; positioned</div>
+    </div>
+  </div>
+</section>
+
+<!-- PILLARS -->
+<div class="section-divider"></div>
+<section>
+  <div class="section-kicker">What's included</div>
+  <h2>Every coverage cycle includes <em>all of this.</em></h2>
+
+  <div class="pillars">
+    <div class="pillar">
+      <div class="pillar-icon">EWS</div>
+      <h3>Early Warning System</h3>
+      <p>Proprietary signal engine monitoring corporate actions, market microstructure, and IR language patterns. When we rate your stock Bullish — 15,000+ investors are notified before the broader market catches on.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">CDF</div>
+      <h3>CDF Research Brief</h3>
+      <p>Catalyst Detection Framework analysis. Earnings beats, forward guidance pivots, corporate actions, and technical setups — written for the retail investor who is about to make a buying decision.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">EMAIL</div>
+      <h3>Direct Distribution</h3>
+      <p>Dedicated blast to 15,000+ verified investor contacts compiled since 2020. Not purchased. Not scraped. Individuals who have engaged with our content and demonstrated active investment behaviour.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">MULTI</div>
+      <h3>Platform Amplification</h3>
+      <p>Coordinated distribution across TikTok, YouTube, Instagram, and Reddit. Our backbone community of active retail investors — 4M+ quarterly views of organic, trust-earned attention.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">EXCL</div>
+      <h3>Sector Exclusivity</h3>
+      <p>One company per sector per coverage cycle. Your story doesn't compete with a direct competitor in the same report. Your audience is yours.</p>
+    </div>
+    <div class="pillar">
+      <div class="pillar-icon">NEWS</div>
+      <h3>Newsletter Feature</h3>
+      <p>Front-of-book placement to 1,500+ active subscribers with above-average open rates. These are investors who opted in, stay in, and act on what they read.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta">
+  <h2>Q2 slots are <em>limited by design.</em></h2>
+  <p>One company per sector. Once your sector is filled, it is closed for the quarter.</p>
+  <div class="bottom-capture">
+    <div class="capture-label" style="text-align:left">Request Coverage Information</div>
+    <div class="capture-form" id="bottomForm" style="display:flex;gap:0;border:1px solid var(--border-bright);border-radius:4px;overflow:hidden;">
+      <input type="email" id="bottomEmail" placeholder="your@company.com" autocomplete="email" />
+      <button onclick="handleSubmit('bottomEmail','bottomForm','bottomSuccess')">Request Info</button>
+    </div>
+    <div class="capture-success" id="bottomSuccess">
+      <span>✓</span> We'll be in touch within 24 hours.
+    </div>
+    <p class="capture-note" style="text-align:left">For issuers only. Confidential.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2026 Stockologi</span>
+  <span>Confidential — Authorized Recipients Only</span>
+</footer>
+
+<script>
+  async function handleSubmit(inputId, formId, successId) {
+    const email = document.getElementById(inputId).value.trim();
+    if (!email || !email.includes('@')) {
+      document.getElementById(inputId).style.outline = '1px solid #c9a84c';
+      return;
+    }
+    const btn = document.querySelector('#' + formId + ' button');
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    try {
+      await fetch('/functions/coverage-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+    } catch(e) { console.error(e); }
+
+    document.getElementById(formId).style.display = 'none';
+    document.getElementById(successId).style.display = 'flex';
+  }
+</script>
+</body>
+</html>
