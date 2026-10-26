@@ -15,17 +15,17 @@ const json = (body, status = 200) =>
 
 const shell = (title, inner) => `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0a0a08;font-family:Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a08;padding:40px 20px;"><tr><td align="center">
+<body style="margin:0;padding:0;background:#f7f4ec;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f4ec;padding:40px 20px;"><tr><td align="center">
 <table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">
-  <tr><td style="padding-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.07);">
-    <div style="font-family:monospace;font-size:11px;letter-spacing:0.2em;color:#c9a84c;text-transform:uppercase;margin-bottom:8px;">Stockologi &middot; The Orphan Sheet</div>
-    <div style="font-size:24px;font-weight:600;color:#e8e6df;line-height:1.2;">${title}</div>
+  <tr><td style="padding-bottom:24px;border-bottom:1px solid rgba(30,28,20,0.10);">
+    <div style="font-family:monospace;font-size:11px;letter-spacing:0.2em;color:#9a7420;text-transform:uppercase;margin-bottom:8px;">Stockologi &middot; The Orphan Sheet</div>
+    <div style="font-size:24px;font-weight:600;color:#1d1b16;line-height:1.2;">${title}</div>
   </td></tr>
-  <tr><td style="padding:24px 0;font-size:15px;color:#b0ada4;line-height:1.8;">${inner}</td></tr>
-  <tr><td style="padding-top:20px;border-top:1px solid rgba(255,255,255,0.07);font-size:11px;color:#55534c;line-height:1.7;">
+  <tr><td style="padding:24px 0;font-size:15px;color:#4a473f;line-height:1.8;">${inner}</td></tr>
+  <tr><td style="padding-top:20px;border-top:1px solid rgba(30,28,20,0.10);font-size:11px;color:#77736a;line-height:1.7;">
     Stockologi is independent retail media and entertainment, not financial advice. Sponsored content is always labelled with compensation disclosed.<br>
-    Save <strong style="color:#7a7870;">hello@stockologi.com</strong> to your contacts so we don't land in spam.
+    Save <strong style="color:#4a473f;">hello@stockologi.com</strong> to your contacts so we don't land in spam.
   </td></tr>
 </table></td></tr></table></body></html>`;
 
@@ -35,7 +35,7 @@ const RETAIL_EMAIL = shell('You\'re on the list.', `
   <p style="margin:0;">First sheet lands Monday.</p>`);
 
 const issuerEmail = (ticker) => shell('Submission received.', `
-  <p style="margin:0 0 16px;">Thanks for submitting ${ticker ? `<strong style="color:#e8e6df;">${ticker}</strong>` : 'your company'} to the Orphan Sheet.</p>
+  <p style="margin:0 0 16px;">Thanks for submitting ${ticker ? `<strong style="color:#1d1b16;">${ticker}</strong>` : 'your company'} to the Orphan Sheet.</p>
   <p style="margin:0 0 16px;">We screen for US and Canadian listings above $300M market cap with recent news the market has not priced in. If it fits, it goes in the queue and we will be in touch.</p>
   <p style="margin:0;">Editorial picks are not for sale. Any sponsored placement is a separate conversation and is always labelled as such.</p>`);
 
