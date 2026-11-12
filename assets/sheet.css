@@ -1,76 +1,75 @@
-// Shared JS for Orphan Sheet pages: attribution, signups, share links.
+/* Orphan Sheet piece pages. Loads after site.css */
 
-// 1. Attribution. Keep the first touch for the session so a reader who
-//    lands from Reddit and signs up two pages later is still credited.
-(function () {
-  try {
-    const q = new URLSearchParams(location.search);
-    if (q.get('utm_source') && !sessionStorage.getItem('stk_ref')) {
-      const ref = [q.get('utm_source'), q.get('utm_campaign'), q.get('utm_content')].filter(Boolean).join('/');
-      sessionStorage.setItem('stk_ref', ref);
-    }
-    if (!sessionStorage.getItem('stk_page')) sessionStorage.setItem('stk_page', location.pathname);
-  } catch (e) {}
-})();
+.piece-head { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 8rem 2rem 2.5rem; }
+.piece-head h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); line-height: 1.08; margin-bottom: 1.25rem; }
+.piece-head h1 em { font-style: italic; color: var(--gold-light); }
+.dek { font-size: 1.1rem; color: var(--text-mid); line-height: 1.7; margin-bottom: 1.5rem; }
+.meta { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; }
+.meta a { color: var(--text-muted); }
 
-function stkRef() {
-  try {
-    return [sessionStorage.getItem('stk_ref') || 'direct', sessionStorage.getItem('stk_page') || location.pathname].join(' | ');
-  } catch (e) { return 'direct | ' + location.pathname; }
-}
+.body { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 0 2rem 3rem; }
+.body > p { color: var(--text-mid); line-height: 1.85; margin-bottom: 1.1rem; }
+.body h2 { font-size: clamp(1.5rem, 3vw, 2rem); margin: 3rem 0 1rem; max-width: none; }
 
-// 2. Signups. Every form on the page has a prefix: <prefix>Form, <prefix>Email,
-//    <prefix>Success, <prefix>Error. kind is "retail" or "issuer".
-async function submitForm(prefix, kind) {
-  kind = kind || 'retail';
-  const email = document.getElementById(prefix + 'Email');
-  const tickerEl = document.getElementById(prefix + 'Ticker');
-  const form = document.getElementById(prefix + 'Form');
-  const ok = document.getElementById(prefix + 'Success');
-  const err = document.getElementById(prefix + 'Error');
-  const btn = form.querySelector('button');
-  const val = email.value.trim();
+/* Inline capture box */
+.capture-box { border: 1px solid var(--border-bright); border-radius: 4px; background: var(--surface); padding: 1.5rem; margin: 2rem 0; box-shadow: 0 1px 2px rgba(30,28,20,0.04); }
+.capture-box h3 { font-size: 1.3rem; margin-bottom: 0.35rem; }
+.capture-box p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; }
+.capture-box .capture { max-width: none; }
 
-  err.style.display = 'none';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) { email.focus(); form.style.borderColor = 'var(--red)'; return; }
-  form.style.borderColor = '';
+/* Members only reveal: the part Reddit does not get */
+.exclusive-tag { display: inline-block; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--gold); border-radius: 2px; padding: 0.15rem 0.45rem; margin-left: 0.5rem; vertical-align: middle; }
 
-  const payload = { email: val, type: kind, ref: stkRef() };
-  if (tickerEl) payload.ticker = tickerEl.value.trim().toUpperCase();
+/* Company cards */
+.co { border: 1px solid var(--border); border-radius: 4px; background: var(--surface); margin: 1.5rem 0; scroll-margin-top: 5.5rem; }
+.co-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 1.1rem 1.4rem; border-bottom: 1px solid var(--border); }
+.co-ticker { font-family: var(--mono); font-size: 1.05rem; font-weight: 500; color: var(--gold); }
+.co-name { font-family: var(--serif); font-size: 1.25rem; margin-left: 0.6rem; }
+.co-facts { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+.co-body { padding: 1.25rem 1.4rem 0.5rem; }
+.co-body h4 { font-family: var(--mono); font-size: 0.64rem; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 0.4rem; }
+.co-body p { font-size: 0.92rem; color: var(--text-mid); line-height: 1.75; margin: 0 0 1.1rem; }
+.co-body .risk { border-left: 2px solid var(--red); padding-left: 1rem; }
+.co-body .risk h4 { color: var(--red); }
+.co-foot { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.85rem 1.4rem; border-top: 1px solid var(--border); background: var(--off-black); }
+.co-sources { font-size: 0.78rem; color: var(--text-muted); }
+.co-sources a { margin-right: 0.9rem; }
+.share-btn { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); background: none; border: 1px solid var(--border-bright); border-radius: 3px; padding: 0.4rem 0.7rem; cursor: pointer; }
+.share-btn:hover { border-color: var(--gold); background: var(--gold-dim); }
 
-  btn.disabled = true;
-  const label = btn.textContent;
-  btn.textContent = 'Sending...';
-  try {
-    const res = await fetch('/coverage-request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    form.style.display = 'none';
-    ok.style.display = 'block';
-  } catch (e) {
-    console.error(e);
-    btn.disabled = false;
-    btn.textContent = label;
-    err.style.display = 'block';
-  }
-}
+/* Poll bars */
+.poll { border: 1px solid var(--border); border-radius: 4px; background: var(--surface); padding: 1.4rem; margin: 1.5rem 0; }
+.poll-q { font-size: 0.9rem; color: var(--text); margin-bottom: 1rem; }
+.bar { display: grid; grid-template-columns: 90px 1fr 56px; align-items: center; gap: 0.75rem; margin: 0.45rem 0; font-family: var(--mono); font-size: 0.78rem; }
+.bar-track { height: 10px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--text-muted); }
+.bar.orphan .bar-fill { background: var(--gold); }
+.bar.orphan span:first-child { color: var(--gold); }
+.bar span:last-child { text-align: right; color: var(--text-muted); }
+.poll-note { font-size: 0.74rem; color: var(--text-muted); margin-top: 0.9rem; }
 
-// 3. Share links. Each company card gets a link straight to its section,
-//    tagged so we can see when IR teams or readers pass it around.
-function shareCompany(ticker) {
-  const url = location.origin + location.pathname + '?utm_source=share&utm_campaign=company&utm_content=' + encodeURIComponent(ticker) + '#' + encodeURIComponent(ticker);
-  const done = () => toast('Link to ' + ticker + ' copied');
-  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => prompt('Copy this link', url));
-  else prompt('Copy this link', url);
-}
+/* Issuer strip */
+.issuer-strip { border: 1px solid var(--border-bright); border-radius: 4px; background: var(--off-black); padding: 1.75rem; margin: 3rem 0 1rem; }
+.issuer-strip h3 { font-size: 1.35rem; margin-bottom: 0.5rem; }
+.issuer-strip p { font-size: 0.9rem; color: var(--text-mid); margin-bottom: 1.1rem; }
+.issuer-strip .capture { max-width: 560px; }
 
-function toast(msg) {
-  let t = document.querySelector('.toast');
-  if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
-  t.textContent = msg;
-  t.classList.add('on');
-  setTimeout(() => t.classList.remove('on'), 1800);
+/* Archive list */
+.issues { list-style: none; margin-top: 2rem; border-top: 1px solid var(--border); }
+.issues li { border-bottom: 1px solid var(--border); }
+.issues a { display: grid; grid-template-columns: 110px 1fr auto; gap: 1rem; align-items: baseline; padding: 1.1rem 0.25rem; text-decoration: none; color: var(--text); }
+.issues a:hover h3 { color: var(--gold); }
+.issues .date { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.issues h3 { font-size: 1.2rem; }
+.issues .tickers { font-family: var(--mono); font-size: 0.7rem; color: var(--gold); }
+
+.toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--ink); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; padding: 0.7rem 1.1rem; border-radius: 3px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 200; }
+.toast.on { opacity: 1; }
+
+@media (max-width: 720px) {
+  .piece-head { padding: 6.5rem 1rem 2rem; }
+  .body { padding: 0 1rem 2.5rem; }
+  .co-head { flex-direction: column; gap: 0.3rem; }
+  .co-facts { white-space: normal; }
+  .issues a { grid-template-columns: 1fr; gap: 0.2rem; }
 }
