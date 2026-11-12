@@ -1,7 +1,9 @@
 // POST /coverage-request
 // Handles both forms on stockologi.com:
 //   type "retail" -> Orphan Sheet signup
-//   type "issuer" -> coverage submission (email + ticker)
+//   type "issuer" -> coverage submission or page claim (email + ticker)
+//   type "watch"  -> watch a ticker from its directory page (email + ticker)
+// Env: DB (D1 binding, optional) stores watches and claims
 // Env: BREVO_API_KEY (required), RETAIL_LIST_ID (optional, defaults to 2), ISSUER_LIST_ID (optional, defaults to 2)
 
 const CORS = {
@@ -34,6 +36,11 @@ const RETAIL_EMAIL = shell('You\'re on the list.', `
   <p style="margin:0 0 16px;">Each name comes with the bull case, the risks the bulls skip, and where it sits on the Orphan Index against the Russell 2000.</p>
   <p style="margin:0;">First sheet lands Monday.</p>`);
 
+const watchEmail = (ticker) => shell(`Watching ${ticker}.`, `
+  <p style="margin:0 0 16px;">You'll get an email when <strong style="color:#1d1b16;">${ticker}</strong> files a new press release, with what changed.</p>
+  <p style="margin:0 0 16px;">Its page: <a href="https://stockologi.com/t/${ticker}" style="color:#9a7420;">stockologi.com/t/${ticker}</a></p>
+  <p style="margin:0;">You also get the Orphan Sheet every Monday: overlooked small and mid caps with real news and flat attention.</p>`);
+
 const issuerEmail = (ticker) => shell('Submission received.', `
   <p style="margin:0 0 16px;">Thanks for submitting ${ticker ? `<strong style="color:#1d1b16;">${ticker}</strong>` : 'your company'} to the Orphan Sheet.</p>
   <p style="margin:0 0 16px;">We screen for US and Canadian listings above $300M market cap with recent news the market has not priced in. If it fits, it goes in the queue and we will be in touch.</p>
@@ -53,8 +60,8 @@ async function brevo(env, path, body) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { email, type, ticker } = await request.json();
-    const kind = type === 'issuer' ? 'issuer' : 'retail';
+    const { email, type, ticker, ref } = await request.json();
+    const kind = type === 'issuer' ? 'issuer' : type === 'watch' ? 'watch' : 'retail';
     const cleanTicker = (ticker || '').toString().toUpperCase().replace(/[^A-Z0-9.:\-]/g, '').slice(0, 12);
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'Invalid email' }, 400);
@@ -62,20 +69,33 @@ export async function onRequestPost({ request, env }) {
     const listId = Number(kind === 'issuer' ? env.ISSUER_LIST_ID || 2 : env.RETAIL_LIST_ID || 2);
     const source = kind === 'issuer'
       ? `stockologi.com coverage submission${cleanTicker ? ' ' + cleanTicker : ''}`
-      : 'stockologi.com orphan sheet signup';
+      : kind === 'watch'
+        ? `stockologi.com watch ${cleanTicker}`
+        : 'stockologi.com orphan sheet signup';
+    // ref = "utm_source/utm_campaign/utm_content | landing page", sent by /assets/sheet.js
+    const cleanRef = (ref || '').toString().replace(/[^\w\s\/|.:\-]/g, '').slice(0, 160);
+
+    // Keep our own record of who watches or claims what. Never block the signup on it.
+    if (env.DB && cleanTicker && kind !== 'retail') {
+      const table = kind === 'watch' ? 'watches' : 'claims';
+      await env.DB.prepare(`INSERT OR IGNORE INTO ${table} (email, ticker, ref, created_at) VALUES (?, ?, ?, ?)`)
+        .bind(email.toLowerCase(), cleanTicker, cleanRef, new Date().toISOString()).run().catch((e) => console.error(e));
+    }
 
     await brevo(env, 'contacts', {
       email,
-      attributes: { SOURCE: source },
+      attributes: { SOURCE: cleanRef ? `${source} | ${cleanRef}` : source },
       listIds: [listId],
       updateEnabled: true,
     });
 
     await brevo(env, 'smtp/email', {
       sender: { name: 'Stockologi', email: 'hello@stockologi.com' },
+      replyTo: { email: 'hello@stockologi.com' },
       to: [{ email }],
-      subject: kind === 'issuer' ? `Orphan Sheet submission received${cleanTicker ? ': ' + cleanTicker : ''}` : 'You\'re on the Orphan Sheet list',
-      htmlContent: kind === 'issuer' ? issuerEmail(cleanTicker) : RETAIL_EMAIL,
+      subject: kind === 'issuer' ? `Orphan Sheet submission received${cleanTicker ? ': ' + cleanTicker : ''}`
+        : kind === 'watch' ? `Watching ${cleanTicker} on Stockologi` : 'You\'re on the Orphan Sheet list',
+      htmlContent: kind === 'issuer' ? issuerEmail(cleanTicker) : kind === 'watch' ? watchEmail(cleanTicker) : RETAIL_EMAIL,
     });
 
     if (kind === 'issuer') {
