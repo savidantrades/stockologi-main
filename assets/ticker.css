@@ -126,3 +126,11 @@ table.dir td a { color: var(--text); text-decoration: none; }
 table.dir td a:hover { color: var(--gold); }
 table.dir .sym-link { font-family: var(--mono); font-weight: 500; color: var(--gold) !important; }
 .tl .row .itag { margin: 0; }
+
+/* Ask an AI */
+.ask { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 1.6rem 0; margin: 1rem 0 2rem; }
+.ask h3 { font-size: 1.3rem; margin-bottom: 0.3rem; }
+.ask p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; }
+.ask-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.ask-btn { font-family: var(--sans); font-size: 0.9rem; color: var(--text); text-decoration: none; border: 1px solid var(--border-bright); background: var(--surface); border-radius: 4px; padding: 0.6rem 1rem; }
+.ask-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
