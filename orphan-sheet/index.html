@@ -1,18 +1,68 @@
-Stockologi
-The Index Issuers
-The Orphan Sheet · Archive
-Every sheet. Every name. No deleting.
-Overlooked US and Canadian small and mid caps putting out real news while nobody is looking. New issue every Monday.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>All Orphan Sheets | Stockologi</title>
+<meta name="description" content="Every issue of the Orphan Sheet. Overlooked US and Canadian small and mid caps with real news and flat attention.">
+<link rel="canonical" href="https://stockologi.com/orphan-sheet/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/sheet.css">
+</head>
+<body>
 
-Get Monday's sheet before Reddit does.
-Free, one email a week.
+<nav>
+  <a class="nav-logo" href="/">Stock<span>ologi</span></a>
+  <div class="nav-links">
+    <a class="hide-sm" href="/#index">The Index</a>
+    <a href="/#issuers">Issuers</a>
+  </div>
+</nav>
 
-you@email.com
- Send it
-✓ You're on the list.
-Something broke. Email hello@stockologi.com.
-[Mon DD]
-[Headline]
-[AAAA BBBB CCCC]
-© 2026 Stockologi hello@stockologi.com
-Stockologi is independent retail media and entertainment. Nothing here is financial, investment, tax or legal advice, or a recommendation to buy or sell any security.
+<header class="piece-head">
+  <div class="kicker">The Orphan Sheet &middot; Archive</div>
+  <h1>Every sheet. <em>Every name. No deleting.</em></h1>
+  <p class="dek">Overlooked US and Canadian small and mid caps putting out real news while nobody is looking. New issue every Monday.</p>
+</header>
+
+<main class="body">
+
+  <div class="capture-box">
+    <h3>Get Monday's sheet before Reddit does.</h3>
+    <p>Free, one email a week.</p>
+    <div class="capture">
+      <div class="capture-form" id="topForm">
+        <input type="email" id="topEmail" placeholder="you@email.com" autocomplete="email">
+        <button type="button" onclick="submitForm('top','retail')">Send it</button>
+      </div>
+      <div class="capture-success" id="topSuccess">&#10003; You're on the list.</div>
+      <div class="capture-error" id="topError">Something broke. Email hello@stockologi.com.</div>
+    </div>
+  </div>
+
+  <!-- Newest first. Add one <li> per issue. -->
+  <ul class="issues">
+    <li><a href="/orphan-sheet/[YYYY-MM-DD]">
+      <span class="date">[Mon DD]</span>
+      <h3>[Headline]</h3>
+      <span class="tickers">[AAAA BBBB CCCC]</span>
+    </a></li>
+  </ul>
+
+</main>
+
+<footer>
+  <div class="foot-row">
+    <span>&copy; 2026 Stockologi</span>
+    <span>hello@stockologi.com</span>
+  </div>
+  <p class="disclosure">Stockologi is independent retail media and entertainment. Nothing here is financial, investment, tax or legal advice, or a recommendation to buy or sell any security.</p>
+</footer>
+
+<script src="/assets/sheet.js"></script>
+</body>
+</html>
