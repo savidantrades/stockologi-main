@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<!--
+  ORPHAN SHEET PIECE TEMPLATE
+  Copy to /orphan-sheet/YYYY-MM-DD.html (served at stockologi.com/orphan-sheet/YYYY-MM-DD).
+  Replace every [BRACKETED] value. Duplicate the .co card per name.
+  Rule: Reddit gets the short version. This page holds what Reddit does not:
+  the full table, the poll numbers, and the risk section on every name.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex"><!-- DELETE THIS LINE in the real issue -->
+<title>[HEADLINE] | The Orphan Sheet</title>
+<meta name="description" content="[ONE LINE DEK. Name the tickers.]">
+<link rel="canonical" href="https://stockologi.com/orphan-sheet/[YYYY-MM-DD]">
+<meta property="og:type" content="article">
+<meta property="og:title" content="[HEADLINE]">
+<meta property="og:description" content="[ONE LINE DEK]">
+<meta property="og:url" content="https://stockologi.com/orphan-sheet/[YYYY-MM-DD]">
+<meta name="twitter:card" content="summary">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<link rel="stylesheet" href="/assets/sheet.css">
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">Stock<span>ologi</span></a>
+  <div class="nav-links">
+    <a class="hide-sm" href="/orphan-sheet/">All sheets</a>
+    <a class="hide-sm" href="/#index">The Index</a>
+    <a href="#issuers">Issuers</a>
+  </div>
+</nav>
+
+<header class="piece-head">
+  <div class="kicker">The Orphan Sheet &middot; Issue [NN] &middot; [Mon DD, YYYY]</div>
+  <h1>[Headline that names the angle.] <em>[Gold italic punch.]</em></h1>
+  <p class="dek">[Two sentences. What these names have in common and why nobody is paying attention.]</p>
+  <div class="meta">
+    <span>[N] names</span>
+    <span>[X] min read</span>
+    <span>Discuss on <a href="[REDDIT THREAD URL]">r/[SUB]</a></span>
+  </div>
+</header>
+
+<main class="body">
+
+  <p>[Intro paragraph. This can match the Reddit post opening so readers who clicked through feel at home.]</p>
+
+  <!-- TOP CAPTURE: catches the skimmers before they bounce -->
+  <div class="capture-box">
+    <h3>Get Monday's sheet before Reddit does.</h3>
+    <p>Full table, poll numbers and risk notes in your inbox. Free, one email a week.</p>
+    <div class="capture">
+      <div class="capture-form" id="topForm">
+        <input type="email" id="topEmail" placeholder="you@email.com" autocomplete="email">
+        <button type="button" onclick="submitForm('top','retail')">Send it</button>
+      </div>
+      <div class="capture-success" id="topSuccess">&#10003; You're on the list.</div>
+      <div class="capture-error" id="topError">Something broke. Email hello@stockologi.com.</div>
+    </div>
+  </div>
+
+  <!-- FULL TABLE: Reddit only gets the tickers -->
+  <h2>The full sheet <span class="exclusive-tag">Site only</span></h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Ticker</th><th>Sector</th><th>Mkt cap</th><th>The news</th><th>PR reaction</th><th>Poll picks</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><a href="#AAAA">AAAA</a></td><td>[Sector]</td><td>[$X.XB]</td><td>[Contract / filing / result]</td><td>[+X.X% day 1]</td><td>[X%]</td></tr>
+        <tr><td><a href="#BBBB">BBBB</a></td><td>[Sector]</td><td>[$X.XB]</td><td>[Contract / filing / result]</td><td>[+X.X% day 1]</td><td>[X%]</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="capture-note">Market caps and reactions as of [date, source]. Verify before acting on anything.</p>
+
+  <!-- COMPANY CARDS: one per name. id must equal the ticker so share links land here -->
+  <h2>The names</h2>
+
+  <article class="co" id="AAAA">
+    <div class="co-head">
+      <div><span class="co-ticker">AAAA</span><span class="co-name">[Company Name]</span></div>
+      <div class="co-facts">[EXCHANGE] &middot; [$X.XB] &middot; [Sector]</div>
+    </div>
+    <div class="co-body">
+      <h4>The news</h4>
+      <p>[What they announced, with date. Link the PR below.]</p>
+      <h4>Why nobody cares</h4>
+      <p>[Volume, price reaction, poll picks. The gap is the story.]</p>
+      <h4>The bull case</h4>
+      <p>[Real case in plain sentences.]</p>
+      <div class="risk">
+        <h4>The part the shills skip</h4>
+        <p>[Dilution, debt, burn, thin float, customer concentration. Verified numbers only.]</p>
+      </div>
+    </div>
+    <div class="co-foot">
+      <div class="co-sources"><a href="[PR URL]">Press release</a><a href="[FILING URL]">Filing</a></div>
+      <button class="share-btn" onclick="shareCompany('AAAA')">Copy link to AAAA</button>
+    </div>
+  </article>
+
+  <article class="co" id="BBBB">
+    <div class="co-head">
+      <div><span class="co-ticker">BBBB</span><span class="co-name">[Company Name]</span></div>
+      <div class="co-facts">[EXCHANGE] &middot; [$X.XB] &middot; [Sector]</div>
+    </div>
+    <div class="co-body">
+      <h4>The news</h4>
+      <p>[...]</p>
+      <h4>Why nobody cares</h4>
+      <p>[...]</p>
+      <h4>The bull case</h4>
+      <p>[...]</p>
+      <div class="risk">
+        <h4>The part the shills skip</h4>
+        <p>[...]</p>
+      </div>
+    </div>
+    <div class="co-foot">
+      <div class="co-sources"><a href="[PR URL]">Press release</a><a href="[FILING URL]">Filing</a></div>
+      <button class="share-btn" onclick="shareCompany('BBBB')">Copy link to BBBB</button>
+    </div>
+  </article>
+
+  <!-- POLL: Reddit gets the headline result, site gets the full breakdown -->
+  <h2>The Perception Poll <span class="exclusive-tag">Site only</span></h2>
+  <div class="poll">
+    <div class="poll-q">"[Exact poll question as posted]" &middot; [N] votes across [subs]</div>
+    <!-- width = vote share. Add class "orphan" to orphan rows -->
+    <div class="bar"><span>[NVDA]</span><div class="bar-track"><div class="bar-fill" style="width:[48]%"></div></div><span>[48%]</span></div>
+    <div class="bar"><span>[TSLA]</span><div class="bar-track"><div class="bar-fill" style="width:[31]%"></div></div><span>[31%]</span></div>
+    <div class="bar orphan"><span>AAAA</span><div class="bar-track"><div class="bar-fill" style="width:[4]%"></div></div><span>[4%]</span></div>
+    <div class="bar orphan"><span>BBBB</span><div class="bar-track"><div class="bar-fill" style="width:[2]%"></div></div><span>[2%]</span></div>
+    <div class="poll-note">[One line takeaway. Unscientific Reddit poll, not a survey.]</div>
+  </div>
+
+  <p>[Closing paragraph. What to watch next week.]</p>
+
+  <!-- BOTTOM CAPTURE -->
+  <div class="capture-box">
+    <h3>Next sheet drops Monday.</h3>
+    <p>Get it a day early, with every name added to the Orphan Index scoreboard.</p>
+    <div class="capture">
+      <div class="capture-form" id="bottomForm">
+        <input type="email" id="bottomEmail" placeholder="you@email.com" autocomplete="email">
+        <button type="button" onclick="submitForm('bottom','retail')">Send it</button>
+      </div>
+      <div class="capture-success" id="bottomSuccess">&#10003; You're on the list.</div>
+      <div class="capture-error" id="bottomError">Something broke. Email hello@stockologi.com.</div>
+    </div>
+  </div>
+
+  <!-- ISSUER SIDE: companies on the sheet share their section; companies off it submit -->
+  <div class="issuer-strip" id="issuers">
+    <div class="kicker">For public companies</div>
+    <h3>On this sheet? Share your section. Not on it? Get in the queue.</h3>
+    <p>Every name above has its own link. Use the copy button on your card. If you run IR at a US or Canadian company above $300M and your news is landing flat, send us the ticker.</p>
+    <div class="capture">
+      <div class="capture-form ghost" id="issuerForm">
+        <input type="email" id="issuerEmail" placeholder="you@company.com" autocomplete="email">
+        <input type="text" id="issuerTicker" placeholder="Ticker" maxlength="12">
+        <button type="button" onclick="submitForm('issuer','issuer')">Submit</button>
+      </div>
+      <div class="capture-success" id="issuerSuccess">&#10003; Got it. We'll reply from hello@stockologi.com.</div>
+      <div class="capture-error" id="issuerError">Something broke. Email hello@stockologi.com with your ticker.</div>
+      <p class="capture-note">Submission does not guarantee coverage. Editorial picks are not for sale.</p>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="foot-row">
+    <span>&copy; 2026 Stockologi</span>
+    <span><a href="/orphan-sheet/" style="color:inherit">All sheets</a> &middot; hello@stockologi.com</span>
+  </div>
+  <p class="disclosure"><strong>Positions:</strong> [None / list]. Stockologi received no compensation from any company in this issue. Stockologi is independent retail media and entertainment. Nothing here is financial, investment, tax or legal advice, or a recommendation to buy or sell any security. Small and mid cap stocks are volatile and can lose most or all of their value. Do your own research.</p>
+</footer>
+
+<script src="/assets/sheet.js"></script>
+</body>
+</html>
