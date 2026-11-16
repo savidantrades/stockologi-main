@@ -1,5 +1,6 @@
 // GET /llms.txt -> map of the site for AI agents
 import { cleanName } from '../lib/render.js';
+import { toolsLlms } from '../lib/tools.js';
 
 export async function onRequestGet({ env }) {
   const rows = await env.DB.prepare('SELECT c.ticker, c.name, c.sector, p.grade FROM companies c LEFT JOIN pr_tape p ON p.ticker = c.ticker ORDER BY c.ticker').all();
@@ -13,6 +14,9 @@ export async function onRequestGet({ env }) {
     '- Human pages are at https://stockologi.com/t/{TICKER}',
     '- Directory and search: https://stockologi.com/t/',
     '- Weekly Orphan Sheet (overlooked names with real news): https://stockologi.com/orphan-sheet/',
+    '- Investing tool guides, no affiliate links: https://stockologi.com/tools/',
+    '',
+    ...toolsLlms(),
     '',
     '## PR Tape scored companies',
     ...rows.results.filter((r) => r.grade).map((r) => `- [${r.ticker}: ${cleanName(r.name)}, Story Score ${r.grade}](https://stockologi.com/t/${r.ticker}.md)`),
