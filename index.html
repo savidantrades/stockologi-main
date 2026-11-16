@@ -160,6 +160,17 @@
   th { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); font-weight: 400; }
   td { color: var(--text-mid); font-family: var(--mono); }
   tr:last-child td { border-bottom: none; }
+  .oi-lock { position: relative; margin-top: 2.5rem; }
+  .oi-blur { margin-top: 0; filter: blur(3px); opacity: 0.55; pointer-events: none; user-select: none; }
+  .oi-blur td { padding: 1rem; }
+  .rd { display: inline-block; height: 10px; border-radius: 2px; background: rgba(30,28,20,0.18); vertical-align: middle; }
+  .oi-gate { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1.5rem; }
+  .oi-gate > * { max-width: 460px; }
+  .oi-k { font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.6rem; }
+  .oi-gate h3 { font-family: var(--serif); font-size: 1.6rem; line-height: 1.2; margin-bottom: 0.5rem; }
+  .oi-gate p { margin: 0 auto 1rem; font-size: 0.92rem; }
+  .oi-gate .capture-form { background: var(--surface); box-shadow: 0 8px 28px rgba(30,28,20,0.10); }
+  @media (max-width: 640px) { .oi-lock { min-height: 360px; } .oi-blur { position: absolute; inset: 0; overflow: hidden; } }
   .empty-row td { text-align: center; color: var(--text-muted); font-family: var(--sans); padding: 2rem 1rem; }
 
   /* PROOF / CREED */
@@ -279,19 +290,29 @@
 <section id="index">
   <div class="kicker muted">The Orphan Index</div>
   <h2>The scoreboard. <em>No deleting the losers.</em></h2>
-  <p>Every name we cover, how the market reacted to its news, and how it has run against the Russell 2000 since it hit the sheet.</p>
+  <p>Every name we cover, how the market reacted to its news, and how it has run against the Russell 2000 since it hit the sheet. Subscribers get the full board every Monday. Winners and losers, nothing deleted.</p>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Ticker</th><th>Sector</th><th>Mkt cap</th><th>Added</th><th>PR reaction</th><th>vs Russell 2000</th><th>Poll picks</th>
-        </tr>
-      </thead>
-      <tbody id="indexBody">
-        <tr class="empty-row"><td colspan="7">The index goes live with this week's sheet. Join the list above to get it first.</td></tr>
-      </tbody>
-    </table>
+  <div class="oi-lock">
+    <div class="table-wrap oi-blur" aria-hidden="true">
+      <table>
+        <thead><tr><th>Ticker</th><th>Sector</th><th>Mkt cap</th><th>Added</th><th>PR reaction</th><th>vs Russell 2000</th><th>Poll picks</th></tr></thead>
+        <tbody><tr><td><i class="rd" style="width:38px"></i></td><td><i class="rd" style="width:70px"></i></td><td><i class="rd" style="width:40px"></i></td><td><i class="rd" style="width:46px"></i></td><td><i class="rd" style="width:54px"></i></td><td><i class="rd" style="width:48px"></i></td><td><i class="rd" style="width:28px"></i></td></tr><tr><td><i class="rd" style="width:44px"></i></td><td><i class="rd" style="width:56px"></i></td><td><i class="rd" style="width:40px"></i></td><td><i class="rd" style="width:46px"></i></td><td><i class="rd" style="width:60px"></i></td><td><i class="rd" style="width:40px"></i></td><td><i class="rd" style="width:28px"></i></td></tr><tr><td><i class="rd" style="width:34px"></i></td><td><i class="rd" style="width:82px"></i></td><td><i class="rd" style="width:40px"></i></td><td><i class="rd" style="width:46px"></i></td><td><i class="rd" style="width:50px"></i></td><td><i class="rd" style="width:52px"></i></td><td><i class="rd" style="width:28px"></i></td></tr><tr><td><i class="rd" style="width:40px"></i></td><td><i class="rd" style="width:64px"></i></td><td><i class="rd" style="width:40px"></i></td><td><i class="rd" style="width:46px"></i></td><td><i class="rd" style="width:58px"></i></td><td><i class="rd" style="width:44px"></i></td><td><i class="rd" style="width:28px"></i></td></tr><tr><td><i class="rd" style="width:36px"></i></td><td><i class="rd" style="width:74px"></i></td><td><i class="rd" style="width:40px"></i></td><td><i class="rd" style="width:46px"></i></td><td><i class="rd" style="width:52px"></i></td><td><i class="rd" style="width:50px"></i></td><td><i class="rd" style="width:28px"></i></td></tr></tbody>
+      </table>
+    </div>
+    <div class="oi-gate">
+      <div class="oi-k">Subscribers only</div>
+      <h3>The full scoreboard lands in your inbox.</h3>
+      <p>Every orphan we have called, its press release reaction, and its run against the Russell 2000. Updated every Monday with the sheet.</p>
+      <div class="capture" style="margin:0 auto">
+        <div class="capture-form" id="indexForm">
+          <input type="email" id="indexEmail" placeholder="you@email.com" autocomplete="email">
+          <button type="button" onclick="submitForm('retail','index')">Unlock it</button>
+        </div>
+        <div class="capture-success" id="indexSuccess">&#10003; You're in. The scoreboard comes with Monday's sheet.</div>
+        <div class="capture-error" id="indexError">Something broke. Try again or email hello@stockologi.com.</div>
+        <p class="capture-note">Free. One email a week. Not financial advice.</p>
+      </div>
+    </div>
   </div>
 
   <div class="proof">
@@ -311,8 +332,8 @@
       <p>Every name ships with the risks the bulls skip: dilution, debt, cash burn, thin volume. If it costs us a reader, fine.</p>
     </div>
     <div>
-      <h3>We keep score in public</h3>
-      <p>The index tracks every pick against the benchmark. Bad calls stay up. That is the whole point.</p>
+      <h3>We keep score</h3>
+      <p>The index tracks every pick against the benchmark and goes to every subscriber. Bad calls stay on it. That is the whole point.</p>
     </div>
     <div>
       <h3>Paid means labelled</h3>
@@ -356,12 +377,13 @@
 </footer>
 
 <script>
-  async function submitForm(type) {
-    const email = document.getElementById(type + 'Email');
+  async function submitForm(type, prefix) {
+    prefix = prefix || type;
+    const email = document.getElementById(prefix + 'Email');
     const tickerEl = document.getElementById('issuerTicker');
-    const form = document.getElementById(type + 'Form');
-    const ok = document.getElementById(type + 'Success');
-    const err = document.getElementById(type + 'Error');
+    const form = document.getElementById(prefix + 'Form');
+    const ok = document.getElementById(prefix + 'Success');
+    const err = document.getElementById(prefix + 'Error');
     const btn = form.querySelector('button');
     const val = email.value.trim();
 
