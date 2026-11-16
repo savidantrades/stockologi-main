@@ -83,6 +83,13 @@
     text-transform: uppercase; color: var(--text-muted); text-decoration: none;
   }
   .nav-links a:hover { color: var(--gold); }
+  .nav-menu { display: none; position: relative; }
+  .nav-menu summary { list-style: none; cursor: pointer; font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text); border: 1px solid var(--border-bright); border-radius: 3px; padding: 0.45rem 0.8rem; }
+  .nav-menu summary::-webkit-details-marker { display: none; }
+  .nav-menu[open] summary { border-color: var(--gold); color: var(--gold); }
+  .nav-drop { position: absolute; right: 0; top: calc(100% + 0.5rem); min-width: 200px; background: var(--surface); border: 1px solid var(--border-bright); border-radius: 4px; box-shadow: 0 12px 32px rgba(30,28,20,0.12); display: flex; flex-direction: column; padding: 0.4rem 0; z-index: 200; }
+  .nav-links .nav-drop a { display: block; padding: 0.8rem 1.1rem; font-size: 0.72rem; color: var(--text); }
+  .nav-links .nav-drop a:hover { background: var(--gold-dim); color: var(--gold); }
 
   /* LAYOUT */
   .wrap { position: relative; z-index: 1; max-width: 920px; margin: 0 auto; padding: 0 2rem; }
@@ -205,6 +212,8 @@
   @media (max-width: 720px) {
     nav { padding: 1rem; }
     .nav-links a.hide-sm { display: none; }
+    .nav-menu { display: block; }
+    .nav-links > a:not(.hide-sm) { display: none; }
     .hero { padding: 7.5rem 1rem 4rem; min-height: auto; }
     section, .wrap { padding-left: 1rem; padding-right: 1rem; }
     .stat-strip { grid-template-columns: repeat(2, 1fr); }
@@ -231,6 +240,7 @@
     <a class="hide-sm" href="#how">How it works</a>
     <a class="hide-sm" href="#index">The Index</a>
     <a href="#issuers">Issuers</a>
+    <details class="nav-menu"><summary aria-label="Menu">Menu</summary><div class="nav-drop" onclick="this.parentNode.removeAttribute('open')"><a href="/t/">Directory</a><a href="/tools/">Tools</a><a href="/orphan-sheet/">Orphan Sheets</a><a href="/#index">The Index</a><a href="/#issuers">For issuers</a></div></details>
   </div>
 </nav>
 
