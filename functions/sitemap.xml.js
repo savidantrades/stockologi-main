@@ -7,6 +7,7 @@ export async function onRequestGet({ env }) {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${u('/')}
 ${u('/t/')}
+${u('/sleepers/')}
 ${u('/orphan-sheet/')}
 ${u('/tools/', CHECKED)}
 ${GUIDES.map((g) => u(`/tools/${g.slug}`, CHECKED)).join('\n')}
