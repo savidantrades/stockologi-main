@@ -4,16 +4,21 @@ import { tickerPage, tickerMd, shell, esc } from '../../lib/render.js';
 
 const HDR = { 'Cache-Control': 'public, max-age=900' };
 
-// Sleeper Score row plus board size. Empty if the table is not loaded yet, so pages never break.
-async function sleeperFor(env, t) {
+// Sleeper Score row plus place within its sector. Empty if the table is not loaded yet, so pages never break.
+async function sleeperFor(env, t, sector) {
   try {
-    const [s, b] = await Promise.all([
-      env.DB.prepare('SELECT * FROM sleeper_scores WHERE ticker = ?').bind(t).first(),
-      env.DB.prepare('SELECT COUNT(*) AS n FROM sleeper_scores WHERE rank IS NOT NULL').first(),
+    const s = await env.DB.prepare('SELECT * FROM sleeper_scores WHERE ticker = ?').bind(t).first();
+    if (!s || s.rank == null) return { s: s || null, place: null };
+    if (!sector) return { s, place: { pos: s.rank, of: (await env.DB.prepare('SELECT COUNT(*) AS n FROM sleeper_scores WHERE rank IS NOT NULL').first())?.n || 0, sector: '' } };
+    const q = `SELECT COUNT(*) AS n FROM sleeper_scores x JOIN companies c ON c.ticker = x.ticker
+      WHERE c.sector = ? AND x.rank IS NOT NULL`;
+    const [ahead, of] = await Promise.all([
+      env.DB.prepare(`${q} AND x.rank < ?`).bind(sector, s.rank).first(),
+      env.DB.prepare(q).bind(sector).first(),
     ]);
-    return { s: s || null, board: b?.n || 0 };
+    return { s, place: { pos: (ahead?.n || 0) + 1, of: of?.n || 0, sector } };
   } catch {
-    return { s: null, board: 0 };
+    return { s: null, place: null };
   }
 }
 
@@ -34,11 +39,11 @@ export async function onRequestGet({ params, env }) {
     env.DB.prepare('SELECT date, form, items, title, url FROM releases WHERE ticker = ? ORDER BY date DESC LIMIT 10').bind(t).all(),
     env.DB.prepare('SELECT date, form, items, acc FROM filings WHERE ticker = ? ORDER BY date DESC LIMIT 10').bind(t).all(),
     env.DB.prepare('SELECT * FROM pr_tape WHERE ticker = ?').bind(t).first(),
-    sleeperFor(env, t),
+    sleeperFor(env, t, c.sector),
   ]);
 
   if (wantMd) {
-    return new Response(tickerMd(c, rel.results, fil.results, tape, sl.s, sl.board), { headers: { ...HDR, 'Content-Type': 'text/markdown; charset=utf-8' } });
+    return new Response(tickerMd(c, rel.results, fil.results, tape, sl.s, sl.place), { headers: { ...HDR, 'Content-Type': 'text/markdown; charset=utf-8' } });
   }
-  return new Response(tickerPage(c, rel.results, fil.results, tape, sl.s, sl.board), { headers: { ...HDR, 'Content-Type': 'text/html; charset=utf-8' } });
+  return new Response(tickerPage(c, rel.results, fil.results, tape, sl.s, sl.place), { headers: { ...HDR, 'Content-Type': 'text/html; charset=utf-8' } });
 }
