@@ -1,0 +1,101 @@
+name: Weekly directory refresh
+
+# Sunday 22:00 UTC = Monday 6am Manila, before the Orphan Sheet. The Monday 03:00 UTC run is the
+# backup: it does nothing if Sunday's run already landed.
+on:
+  schedule:
+    - cron: "0 22 * * 0"
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-refresh
+  cancel-in-progress: false
+
+env:
+  DB: stockologi-dir
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install
+        run: |
+          pip install requests
+          npm install -g wrangler@3
+
+      - name: Skip if this week already ran
+        id: gate
+        run: |
+          last=$(wrangler d1 execute "$DB" --remote --json --command "SELECT MAX(asof) AS a FROM sleeper_scores" | python3 -c "import json,sys; print(json.load(sys.stdin)[0]['results'][0]['a'] or '')")
+          echo "Last scores: $last"
+          if [ "${{ github.event_name }}" = "schedule" ] && [ "${{ github.event.schedule }}" = "0 3 * * 1" ] && [ -n "$last" ] \
+             && [ "$(( ( $(date -u +%s) - $(date -u -d "$last" +%s) ) / 86400 ))" -le 1 ]; then
+            echo "Sunday run already landed. Nothing to do."; echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Export what is already in D1
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          wrangler d1 execute "$DB" --remote --json --command \
+            "SELECT ticker, cik FROM companies; SELECT ticker, acc FROM filings; SELECT ticker, url FROM releases" > existing.json
+          python3 -c "import json; d=json.load(open('existing.json')); print([len(b.get('results') or []) for b in d])"
+
+      - name: Refresh companies, filings, releases
+        if: steps.gate.outputs.skip != 'true'
+        run: python3 scripts/refresh_directory.py --existing existing.json
+
+      - name: Write refresh to D1
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          for i in 1 2 3; do wrangler d1 execute "$DB" --remote --yes --file scripts/out/refresh.sql && break; echo "retry $i"; sleep 30; done
+
+      - name: Score Sleepers
+        if: steps.gate.outputs.skip != 'true'
+        run: python3 scripts/sleeper_score.py
+
+      - name: Write scores to D1
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          for i in 1 2 3; do wrangler d1 execute "$DB" --remote --yes --file scripts/out/sleeper_scores.sql && break; echo "retry $i"; sleep 30; done
+
+      - name: Freshness check
+        run: |
+          wrangler d1 execute "$DB" --remote --json --command \
+            "SELECT MAX(asof) AS a FROM sleeper_scores; SELECT MAX(price_asof) AS a FROM companies" > fresh.json
+          python3 - <<'EOF'
+          import json, sys
+          from datetime import date
+          d = json.load(open("fresh.json"))
+          scores, caps = (b["results"][0]["a"] for b in d)
+          age = lambda x: (date.today() - date.fromisoformat(x)).days if x else 999
+          print(f"Scores as of {scores} ({age(scores)} days). Market caps as of {caps} ({age(caps)} days).")
+          if age(scores) > 8 or age(caps) > 8:
+              sys.exit("Directory data is more than 8 days old. Stale pages are live.")
+          EOF
+
+      - name: Log the run (also keeps the schedule alive)
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          mkdir -p data
+          cp scripts/out/refresh_summary.json data/last_refresh.json
+          git config user.name "stockologi-bot"
+          git config user.email "hello@stockologi.net"
+          git add data/last_refresh.json
+          git commit -m "Weekly refresh $(date -u +%F)" && git push || echo "Nothing to commit"

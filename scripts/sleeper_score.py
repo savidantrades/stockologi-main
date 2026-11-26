@@ -102,10 +102,27 @@ def bars(t):
     try:
         res = r.json()["chart"]["result"][0]
         q = res["indicators"]["quote"][0]
-        return [(datetime.fromtimestamp(ts, timezone.utc).astimezone(NY).date(), c, v)
-                for ts, c, v in zip(res["timestamp"], q["close"], q["volume"]) if c and v is not None]
+        out = [(datetime.fromtimestamp(ts, timezone.utc).astimezone(NY).date(), c, v)
+               for ts, c, v in zip(res["timestamp"], q["close"], q["volume"]) if c and v is not None]
+        if len(out) >= 40:
+            return out
     except Exception:
-        return []
+        pass
+    return stooq_bars(t)
+
+
+def stooq_bars(t):
+    """Fallback when Yahoo blocks the runner: Stooq daily CSV, last ~6 months."""
+    r = get(WEB, "https://stooq.com/q/d/l/", params={"s": f"{t.replace('.', '-').lower()}.us", "i": "d",
+                                                    "d1": (date.today() - timedelta(days=185)).strftime("%Y%m%d")})
+    out = []
+    for line in (r.text.splitlines()[1:] if r else []):
+        p = line.split(",")
+        try:
+            out.append((date.fromisoformat(p[0]), float(p[4]), float(p[5])))
+        except (IndexError, ValueError):
+            pass
+    return out
 
 
 def filings(cik, since):
@@ -242,6 +259,8 @@ def main():
         if r["status"] == "scored" and r.get("cik") and best[r["cik"]] is not r:
             r.update(status="no_score", reason=f"Second share class of {best[r['cik']]['ticker']}")
     scored = [r for r in recs if r["status"] == "scored"]
+    if not limit and len(scored) < 100:
+        sys.exit(f"Only {len(scored)} companies scored. Price data is probably blocked. Keeping last week's scores.")
     news_p = pct_ranks([r["news"] for r in scored])
     react_p = pct_ranks([r["reaction_x"] for r in scored], reverse=True)   # lower reaction ranks higher
     turn_p = pct_ranks([r["turnover_days"] for r in scored])
@@ -270,12 +289,14 @@ def main():
         return "NULL" if v is None else (str(v) if isinstance(v, (int, float)) else "'" + str(v).replace("'", "''") + "'")
     sql = ["CREATE TABLE IF NOT EXISTS sleeper_scores (ticker TEXT PRIMARY KEY, asof TEXT, score INTEGER, rank INTEGER, "
            "news REAL, news_pct INTEGER, reaction_x REAL, reaction_pct INTEGER, turnover_days INTEGER, turnover_pct INTEGER, "
-           "move_pct REAL, flags TEXT, status TEXT, reason TEXT);", "DELETE FROM sleeper_scores;"]
+           "move_pct REAL, flags TEXT, status TEXT, reason TEXT);"]
     for r in scored + [r for r in recs if r["status"] != "scored"]:
-        sql.append("INSERT INTO sleeper_scores VALUES (" + ", ".join(q(x) for x in [
+        sql.append("INSERT OR REPLACE INTO sleeper_scores VALUES (" + ", ".join(q(x) for x in [
             r["ticker"], meta["asof"], r.get("score"), r.get("rank"), r.get("news"), r.get("news_pct"), r.get("reaction_x"),
             r.get("reaction_pct"), r.get("turnover_days"), r.get("turnover_pct"), r.get("move_pct"),
             "; ".join(r.get("flags", [])), r["status"], r.get("reason", "")]) + ");")
+    # Replace rows in place, then drop tickers that left the directory. Never an empty table mid-write.
+    sql.append(f"DELETE FROM sleeper_scores WHERE asof <> {q(meta['asof'])};")
     (OUT / "sleeper_scores.sql").write_text("\n".join(sql) + "\n")
     print(json.dumps(meta), file=sys.stderr)
 
