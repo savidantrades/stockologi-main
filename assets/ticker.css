@@ -134,3 +134,14 @@ table.dir .sym-link { font-family: var(--mono); font-weight: 500; color: var(--g
 .ask-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .ask-btn { font-family: var(--sans); font-size: 0.9rem; color: var(--text); text-decoration: none; border: 1px solid var(--border-bright); background: var(--surface); border-radius: 4px; padding: 0.6rem 1rem; }
 .ask-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
+/* In brief: answer first block for readers and AI engines */
+.brief .brief-lede { font-size: 1.06rem; line-height: 1.75; color: var(--text); max-width: 720px; margin: 0.6rem 0 1.4rem; }
+.brief-facts { border-collapse: collapse; width: 100%; max-width: 640px; font-size: 0.86rem; }
+.brief-facts th, .brief-facts td { text-align: left; padding: 0.5rem 0.8rem 0.5rem 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.brief-facts th { font-family: var(--mono); font-size: 0.64rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); width: 34%; }
+.brief-facts td { color: var(--text-mid); }
+
+/* Questions people ask */
+.faq h3 { font-size: 1.15rem; margin: 1.6rem 0 0.4rem; }
+.faq p { font-size: 0.92rem; line-height: 1.7; color: var(--text-mid); max-width: 720px; }
