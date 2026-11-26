@@ -7,6 +7,11 @@ on:
     - cron: "0 22 * * 0"
     - cron: "0 3 * * 1"
   workflow_dispatch:
+    inputs:
+      retitle_since:
+        description: "Only re-read press release headlines dated on or after this date (YYYY-MM-DD). Leave empty for a normal refresh."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -54,12 +59,17 @@ jobs:
         if: steps.gate.outputs.skip != 'true'
         run: |
           wrangler d1 execute "$DB" --remote --json --command \
-            "SELECT ticker, cik FROM companies; SELECT ticker, acc FROM filings; SELECT ticker, url FROM releases" > existing.json
+            "SELECT ticker, cik FROM companies; SELECT ticker, acc FROM filings; SELECT ticker, url, date, title FROM releases" > existing.json
           python3 -c "import json; d=json.load(open('existing.json')); print([len(b.get('results') or []) for b in d])"
 
       - name: Refresh companies, filings, releases
         if: steps.gate.outputs.skip != 'true'
-        run: python3 scripts/refresh_directory.py --existing existing.json
+        run: |
+          if [ -n "${{ inputs.retitle_since }}" ]; then
+            python3 scripts/refresh_directory.py --existing existing.json --retitle-since "${{ inputs.retitle_since }}"
+          else
+            python3 scripts/refresh_directory.py --existing existing.json
+          fi
 
       - name: Write refresh to D1
         if: steps.gate.outputs.skip != 'true'

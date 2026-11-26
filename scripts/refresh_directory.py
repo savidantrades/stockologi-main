@@ -55,17 +55,37 @@ def digits(acc):
     return re.sub(r"\D", "", str(acc or ""))
 
 
+DATELINE = re.compile(r"(\(GLOBE NEWSWIRE\)|/PRNewswire/|\(BUSINESS WIRE\)|ACCESSWIRE|Newsfile Corp|"
+                      r"^[A-Z][A-Za-z .,]+\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.? \d{1,2}, \d{4})")
+NOISE = re.compile(r"(\bL\.?L\.?P\b|\bDocument$|^[A-Z][a-z]+ [A-Z][a-z]+ ?/ ?[A-Z][a-z]+ [A-Z][a-z]+$|"
+                   r"news release dated|^joint (news|press) release|@|www\.|\(\d{3}\) ?\d{3}|^\d{3}[.-]\d{3}[.-]\d{4})", re.I)
+DANGLING = re.compile(r"(\b(for|and|of|to|the|with|in|on|a|an|its|at|by|from)|[;,:&-])$", re.I)
+
+
 def headline(doc_html):
-    text = re.sub(r"(?is)<(script|style).*?</\1>", " ", doc_html)
-    text = re.sub(r"(?i)<br\s*/?>|</(p|div|tr|h\d|li)>", "\n", text)
+    """Release headline: first real line above the dateline, rejoined when a <br> or <p> split it."""
+    text = re.sub(r"(?is)<(script|style|title).*?</\1>", " ", doc_html)
+    text = re.sub(r"(?i)<br\s*/?>|</(p|div|tr|h\d|li|td)>", "\n", text)
     text = html.unescape(re.sub(r"<[^>]+>", " ", text))
-    for line in (re.sub(r"\s+", " ", l).strip() for l in text.split("\n")):
-        words = line.split()
-        if not (5 <= len(words) <= 45) or NOT_TITLE.match(line):
+    lines = [l for l in (re.sub(r"\s+", " ", x).strip() for x in text.split("\n")) if l]
+    for i, line in enumerate(lines[:60]):
+        if DATELINE.search(line):
+            break
+        if NOT_TITLE.match(line) or NOISE.search(line) or len(re.findall(r"[A-Za-z]{2,}", line)) < 4:
             continue
-        if re.match(r"^[A-Z][a-z]+\.? \d{1,2}, \d{4}", line) or "(GLOBE NEWSWIRE)" in line or "/PRNewswire/" in line:
-            continue  # dateline paragraph, the headline came before it
-        return line[:300]
+        title = line
+        # Rejoin a headline split across lines: dangling word, or ALL CAPS continuing in ALL CAPS
+        for nxt in lines[i + 1:i + 4]:
+            if DATELINE.search(nxt) or NOISE.search(nxt) or len(title.split()) > 35:
+                break
+            caps_run = title.isupper() and nxt.isupper()
+            if DANGLING.search(title) or caps_run:
+                title = f"{title} {nxt}"
+            else:
+                break
+        title = title.rstrip(" ;,:-")
+        if 4 <= len(title.split()) <= 45:
+            return title[:300]
     return None
 
 
@@ -111,6 +131,8 @@ def main():
     today = date.today().isoformat()
     since = (date.today() - timedelta(days=LOOKBACK_DAYS)).isoformat()
 
+    if "--retitle-since" in args:
+        return retitle(existing, args[args.index("--retitle-since") + 1])
     companies = rows(existing, "cik")
     have_filings = {(r["ticker"], digits(r["acc"])) for r in rows(existing, "acc")}
     have_releases = {(r["ticker"], m.group(1)) for r in rows(existing, "url")
@@ -182,6 +204,24 @@ def main():
     print(json.dumps(summary), file=sys.stderr)
     if errors > len(companies) * 0.2:
         sys.exit("More than 20% of companies failed. Not writing a partial refresh.")
+
+
+def retitle(existing, since):
+    """Re-read headlines for releases dated on or after `since` and fix the ones that changed."""
+    OUT.mkdir(exist_ok=True)
+    todo = [r for r in rows(existing, "url") if (r.get("date") or "") >= since and r.get("url")]
+    sql, changed = [], 0
+    for r in todo:
+        doc = get(SEC, r["url"])
+        title = doc and headline(doc.text)
+        if title and not NOT_RELEASE.search(title) and title != r.get("title"):
+            sql.append(f"UPDATE releases SET title = {q(title)} WHERE url = {q(r['url'])};")
+            changed += 1
+    sql.append(BAD_RELEASE_SQL)
+    (OUT / "refresh.sql").write_text("\n".join(sql) + "\n")
+    (OUT / "refresh_summary.json").write_text(json.dumps({"asof": date.today().isoformat(), "retitle_since": since,
+                                                          "checked": len(todo), "retitled": changed}))
+    print(f"Checked {len(todo)} releases since {since}, retitled {changed}", file=sys.stderr)
 
 
 if __name__ == "__main__":
