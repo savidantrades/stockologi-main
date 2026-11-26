@@ -69,6 +69,19 @@ def headline(doc_html):
     return None
 
 
+# Exhibits that are filed as EX-99 but are not press releases
+NOT_RELEASE = re.compile(r"(financial statements|management.?s discussion|presentation|investor deck|"
+                         r"notice of (annual|special)|proxy|table of contents|unaudited|interim report)", re.I)
+BAD_RELEASE_SQL = ("DELETE FROM releases WHERE lower(title) LIKE '%financial statements%' "
+                   "OR lower(title) LIKE '%presentation%' OR lower(title) LIKE '%management_s discussion%' "
+                   "OR lower(title) LIKE 'notice of annual%' OR lower(title) LIKE 'notice of special%';")
+
+
+def ex_order(name):
+    m = re.search(r"99[._-]?(\d+)", name)
+    return (int(m.group(1)) if m else 99, name)
+
+
 def release_for(cik, acc_nodash):
     idx = get(SEC, f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc_nodash}/index.json")
     if not idx:
@@ -77,10 +90,13 @@ def release_for(cik, acc_nodash):
     ex = [f for f in files if re.search(r"(ex-?99|ex99|exhibit99|dex99)", f, re.I) and f.lower().endswith((".htm", ".html", ".txt"))]
     if not ex:
         return None
-    url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc_nodash}/{sorted(ex)[0]}"
-    doc = get(SEC, url)
-    title = doc and headline(doc.text)
-    return (title, url) if title else None
+    for name in sorted(ex, key=ex_order)[:3]:  # 99.1 first, then 99.2, 99.3
+        url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc_nodash}/{name}"
+        doc = get(SEC, url)
+        title = doc and headline(doc.text)
+        if title and not NOT_RELEASE.search(title):
+            return title, url
+    return None
 
 
 def q(v):
@@ -156,6 +172,9 @@ def main():
         if n % 100 == 0:
             print(f"{n}/{len(companies)}", file=sys.stderr)
 
+    # Drop exhibits that are not press releases, then point each company at its newest release
+    sql.append(BAD_RELEASE_SQL)
+    sql.append("UPDATE companies SET last_release = (SELECT MAX(date) FROM releases r WHERE r.ticker = companies.ticker);")
     (OUT / "refresh.sql").write_text("\n".join(sql) + "\n")
     summary = {"asof": today, "companies": len(companies), "caps_updated": n_cap,
                "new_filings": n_fil, "new_releases": n_rel, "errors": errors}
