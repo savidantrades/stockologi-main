@@ -62,31 +62,45 @@ NOISE = re.compile(r"(\bL\.?L\.?P\b|\bDocument$|^[A-Z][a-z]+ [A-Z][a-z]+ ?/ ?[A-
 DANGLING = re.compile(r"(\b(for|and|of|to|the|with|in|on|a|an|its|at|by|from)|[;,:&-])$", re.I)
 
 
+ADDRESS = re.compile(r"(\b(suite|avenue|ave\.|street|st\.|drive|road|blvd|boulevard|floor)\b.*\d|\b\d{5}(-\d{4})?\b|◆|•\s*\d)", re.I)
+JUNK = re.compile(r"(trading symbol|not for (immediate )?release|investor relations$|^(tsx|nyse|nasdaq)[ :]|"
+                  r"^(nyse|nasdaq|tsx)(\s+american)?:\s*[a-z]+$)", re.I)
+VERB = re.compile(r"\b(announc|report|complet|enter|receiv|appoint|declar|launch|expand|sign|secur|achiev|provid|"
+                  r"present|host|clos|pric|file|approv|acquir|agree|award|updat|deliver|start|begin|repurchas|issu|"
+                  r"publish|rais|commenc|extend|win|partner|introduc|unveil|name|elect|confirm|initiat|join|strengthen|"
+                  r"advanc|post|record|grant|select|participat|exercis|delivers|reach|increas|reduc|complet|accelerat|"
+                  r"submit|dos|enrol|treat|meet|obtain|generat|mak|establish|chang|redeem|amend|tender|exchang)", re.I)
+
+
 def headline(doc_html):
-    """Release headline: first real line above the dateline, rejoined when a <br> or <p> split it."""
+    """Release headline. Scores the lines above the dateline and keeps the one that reads like news."""
     text = re.sub(r"(?is)<(script|style|title).*?</\1>", " ", doc_html)
     text = re.sub(r"(?i)<br\s*/?>|</(p|div|tr|h\d|li|td)>", "\n", text)
     text = html.unescape(re.sub(r"<[^>]+>", " ", text))
-    lines = [l for l in (re.sub(r"\s+", " ", x).strip() for x in text.split("\n")) if l]
-    for i, line in enumerate(lines[:60]):
-        if DATELINE.search(line):
-            break
-        if NOT_TITLE.match(line) or NOISE.search(line) or len(re.findall(r"[A-Za-z]{2,}", line)) < 4:
+    lines = [l for l in (re.sub(r"\s+", " ", x).strip() for x in text.split("\n")) if l][:80]
+    stop = next((i for i, l in enumerate(lines) if DATELINE.search(l)), len(lines))
+    best, best_score = None, 0
+    for i, line in enumerate(lines[:stop]):
+        if NOT_TITLE.match(line) or NOISE.search(line) or ADDRESS.search(line) or JUNK.search(line):
             continue
         title = line
-        # Rejoin a headline split across lines: dangling word, or ALL CAPS continuing in ALL CAPS
-        for nxt in lines[i + 1:i + 4]:
-            if DATELINE.search(nxt) or NOISE.search(nxt) or len(title.split()) > 35:
+        for nxt in lines[i + 1:stop]:  # rejoin a headline split across lines
+            if NOISE.search(nxt) or ADDRESS.search(nxt) or JUNK.search(nxt) or len(title.split()) > 35:
                 break
-            caps_run = title.isupper() and nxt.isupper()
-            if DANGLING.search(title) or caps_run:
+            if DANGLING.search(title) or (title.isupper() and nxt.isupper()) or nxt[:1].islower():
                 title = f"{title} {nxt}"
             else:
                 break
         title = title.rstrip(" ;,:-")
-        if 4 <= len(title.split()) <= 45:
-            return title[:300]
-    return None
+        n = len(title.split())
+        if not 4 <= n <= 45:
+            continue
+        score = (3 if VERB.search(title) else 0) + (1 if 6 <= n <= 30 else 0)
+        if score > best_score:
+            best, best_score = title, score
+        if score >= 4:
+            break  # first line that reads like news wins
+    return best[:300] if best and best_score >= 3 else None
 
 
 # Exhibits that are filed as EX-99 but are not press releases
